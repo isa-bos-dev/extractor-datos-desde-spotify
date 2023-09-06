@@ -8,19 +8,19 @@ class Episodio:
     """
     Representa un episodio de un podcast.
     """
-    def __init__(self, id, duration_ms, release_date, name, description):
+    def __init__(self, item_id, duration_ms, release_date, name, description):
         """
         Inicializa un episodio.
 
         Args:
-            id (str): ID del episodio
+            item_id (str): ID del episodio
             duduration_ms (int): Duración del episodio en milisegundos
             relrelease_date (str): Fecha de lanzamiento del episodio.
             name (str): Nombre del episodio.
             dedescription (str): Descripción del episodio.
 
         """
-        self.id = id
+        self.item_id = item_id
         self.duration_ms = duration_ms
         self.release_date = release_date
         self.name = name
@@ -33,9 +33,9 @@ class Episodio:
         Returns:
             str: Representación en string del episodio.
         """
-        return f"Episodio(Id: {self.id}\nDuration (ms): {self.duration_ms}\nRelease Date: {self.release_date}\nName: {self.name}\nDescription: {self.description})"
+        return f"Episodio(Id: {self.item_id}\nDuration (ms): {self.duration_ms}\nRelease Date: {self.release_date}\nName: {self.name}\nDescription: {self.description})"
     
-     def __repr__(self):
+    def __repr__(self):
         """
         Devuelve una representación en string del episodio.
 
@@ -99,6 +99,8 @@ def extraer_episodios_podcast(podcast_id, search, access_token):
     counter = 0
     more_runs = 1
 
+    episodios = []
+
     while(counter <= more_runs):
 
 
@@ -122,11 +124,14 @@ def extraer_episodios_podcast(podcast_id, search, access_token):
 
         for i in range(len(json_response['items'])):
 
-            id_list.append(json_response['items'][i]['id'])
-            dur_list.append(json_response['items'][i]['duration_ms'])
-            date_list.append(json_response['items'][i]['release_date'])    
-            name_list.append(json_response['items'][i]['name'])
-            desc_list.append(json_response['items'][i]['description'])
+            episodio = Episodio(
+                item_id=json_response['items'][i]['id'],
+                duration_ms=json_response['items'][i]['duration_ms'],
+                release_date=json_response['items'][i]['release_date'],
+                name=json_response['items'][i]['name'],
+                description=json_response['items'][i]['description']
+            )
+            episodios.append(episodio)
             
             
         more_runs = (json_response['total'] // 50 )         
@@ -135,13 +140,7 @@ def extraer_episodios_podcast(podcast_id, search, access_token):
         
         offset = offset + 50   
     
-    return {
-        'id': id_list,
-        'duration': dur_list,
-        'date': date_list,
-        'name': name_list,
-        'description': desc_list,
-    }
+    return episodios
 
 def main():
 
@@ -151,15 +150,9 @@ def main():
     search = 'Filosofía de bolsillo'
     podcast_id = '768GVwxeh1o6kD5bD0qJeJ' 
 
-    resultado = extraer_episodios_podcast(podcast_id, search, access_token) 
+    episodios = extraer_episodios_podcast(podcast_id, search, access_token) 
 
-    descripciones = resultado['description']
-
-    for d in descripciones:
-        print(d)
-        print('---')
-
-    print(len(descripciones))
+    print(len(episodios))
 
 if __name__ == '__main__':
     main() 
