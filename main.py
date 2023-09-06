@@ -1,3 +1,4 @@
+import argparse
 import os
 import sqlite3
 import requests
@@ -161,6 +162,24 @@ def conectar_bd(archivo_bd):
     except sqlite3.Error as e:
         return None
 
+def existe_tabla(conexion, nombre_tabla):
+    """
+    Verifica si una tabla existe en la base de datos.
+
+    Args:
+        conexion: Conexión a la base de daos SQLite
+        nombre_tabla (str): Nombre de la tabla a verificar
+
+    Returns:
+        bool: True si la tabla ecxiste, False en caso contrario
+    """
+
+    cursor = conexion.cursor()
+    cursor.execute('''SELECT count(name) FROM sqlite_master WHERE type='table' AND name=?''', (nombre_tabla,))
+
+    return cursor.fetchone()[0] == 1
+
+
 def almacenar_episodio(conexion, episodio: Episodio):
     """
     Almacena un episodio en la base de datos.
@@ -187,21 +206,53 @@ def almacenar_episodio(conexion, episodio: Episodio):
     except sqlite3.Error as e:
         print(e)
 
+def crear_tabla_episodio(conexion):
+    """
+    Crea la tabla de episodios en la base de datos.
 
+    Args:
+        conexion (sqlite3.Connection): Conexión con la base de datos.
+    """
+
+    try:
+        cursor = conexion.cursor()
+        cursor.execute('''
+            CREATE TABLE episodio (
+                item_id TEXT PRIMARY KEY,
+                duration_ms INTEGER,
+                release_date TEXT,
+                name TEXT,
+                description TEXT
+            )            
+        ''')
+    except sqlite3.Error as e:
+        print(e)
 
 def main():
+
+    parser = argparse.ArgumentParser(description='Procesar argumentos del script.')
+    parser.add_argument("-c", "--clave_busqueda", help='Clave de búsqueda para el episodio')
+    parser.add_argument("-i", "--id_podcast", help='ID únnico del podcast')
+    parser.add_argument("-d", "--nombre_db", help="Nombre del archivo de la base de datos")
+
+
+    args = parser.parse_args()
+
+    clave_busqueda = args.clave_busqueda
+    podcast_id = args.id_podcast
+    nombre_db = args.nombre_db
 
     client_id, client_secret = obtener_claves_secretas()
     sp, access_token = iniciar_sesion_spotify(client_id, client_secret)
 
-    search = 'Filosofía de bolsillo'
-    podcast_id = '768GVwxeh1o6kD5bD0qJeJ' 
-
-    episodios = extraer_episodios_podcast(podcast_id, search, access_token) 
+    episodios = extraer_episodios_podcast(podcast_id, clave_busqueda, access_token) 
 
     if len(episodios):
 
-        conexion = conectar_bd('filosofia_bolsillo_episodios.db')
+        conexion = conectar_bd(nombre_db)
+
+        if not existe_tabla(conexion, 'episodio'):
+            crear_tabla_episodio(conexion)
 
         for episodio in episodios:
             almacenar_episodio(conexion, episodio)
