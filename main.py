@@ -1,4 +1,5 @@
 import os
+import sqlite3
 import requests
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
@@ -142,6 +143,52 @@ def extraer_episodios_podcast(podcast_id, search, access_token):
     
     return episodios
 
+def conectar_bd(archivo_bd):
+    """
+    Conecta con la base de datos.
+
+    Args:
+        archivo_bd (str): Nombre del archivo de la base de datos.
+
+    Returns: 
+        sqlite3.Connection: Conexión con la base de datos.
+
+    """
+    try:
+        conexion = sqlite3.connect(archivo_bd)
+
+        return conexion
+    except sqlite3.Error as e:
+        return None
+
+def almacenar_episodio(conexion, episodio: Episodio):
+    """
+    Almacena un episodio en la base de datos.
+
+    Args:
+        conexion (sqlite3.Connection): Conexión con la base de datos.
+        episodio (Episodio): Episodio a almacenar
+    """
+    try:
+        cursor = conexion.cursor()
+
+        cursor.execute('''
+            INSERT INTO episodio (item_id, duration_ms, release_date, name, description)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (
+            episodio.item_id,
+            episodio.duration_ms,
+            episodio.release_date,
+            episodio.name,
+            episodio.description
+        ))
+
+        conexion.commit()
+    except sqlite3.Error as e:
+        print(e)
+
+
+
 def main():
 
     client_id, client_secret = obtener_claves_secretas()
@@ -152,7 +199,17 @@ def main():
 
     episodios = extraer_episodios_podcast(podcast_id, search, access_token) 
 
-    print(len(episodios))
+    if len(episodios):
+
+        conexion = conectar_bd('filosofia_bolsillo_episodios.db')
+
+        for episodio in episodios:
+            almacenar_episodio(conexion, episodio)
+        
+        conexion.close()
+
+    else:
+        print('No se encontraron episodios')
 
 if __name__ == '__main__':
     main() 
