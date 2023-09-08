@@ -1,8 +1,8 @@
-# Proyecto 1 - Extractor de Títulos de Libros
+# Extractor de datos desde Spotify
 
-## 1. Módulo - Extracción de Información de Episodios de un podcas
+## 1. Extracción de Información de Episodios de un podcast
 
-Este módulo  es una herramienta que permite extraer títulos de libros de un podcast y almacenarlos en una base de datos local. Los podcast han de estar disponibles en la plataforma de streaming Spotyfy.
+Este módulo  es una herramienta que permite extraer los datos de un podcast y almacenarlos en una base de datos local. Los podcast han de estar disponibles en la plataforma de streaming Spotyfy.
 
 
 ### 1.1 Instalacón
